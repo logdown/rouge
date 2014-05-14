@@ -24,13 +24,16 @@ module Rouge
       def initialize(opts={})
         @css_class = opts.fetch(:css_class, 'highlight')
         @line_numbers = opts.fetch(:line_numbers, false)
+        @tableized = opts.fetch(:tableized, false)
         @inline_theme = opts.fetch(:inline_theme, nil)
         @wrap = opts.fetch(:wrap, true)
+        @wrapper_tag = opts.fetch(:wrapper_tag, 'pre')
+
       end
 
       # @yield the html output.
       def stream(tokens, &b)
-        if @line_numbers
+        if @line_numbers || @tableized
           stream_tableized(tokens, &b)
         else
           stream_untableized(tokens, &b)
@@ -39,11 +42,13 @@ module Rouge
 
     private
       def stream_untableized(tokens, &b)
-        yield "<pre class=#{@css_class.inspect}>" if @wrap
+        yield "<#{@wrapper_tag.to_s} class=#{@css_class.inspect}>" if @wrap
+        yield "<pre>" if @wrapper_tag != "pre"
         tokens.each do |tok, val|
           span(tok, val, &b)
         end
-        yield "</pre>\n" if @wrap
+        yield "</pre>" if @wrapper_tag != "pre"
+        yield "</#{@wrapper_tag.to_s}>\n" if @wrap
       end
 
       def stream_tableized(tokens)
